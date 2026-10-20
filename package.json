@@ -1,0 +1,38 @@
+{
+  "name": "smartcanteen-web",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12"
+  },
+  "workspaces": [
+    "db",
+    "api",
+    "web",
+    "infra"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @smartcanteen/api",
+    "dev:web": "npm run dev -w @smartcanteen/web",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test --workspaces --if-present",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0"
+  }
+}
