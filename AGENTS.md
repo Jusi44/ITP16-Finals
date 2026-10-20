@@ -42,9 +42,12 @@ An external reviewer (Claude) reviews every phase; the human relays messages.
 ## Commands (keep this section accurate as the repo grows)
 - `docker compose up -d db` — local Postgres
 - `npm run dev -w api` / `npm run dev -w web`
-- `npm run test -w api`, `npm run lint`, `npm run typecheck`, `npm run build`
-- `npm run db:migrate -w api`, `npm run db:seed -w api`
-- `npm run user:set-password -w api` — rotate a user's password from env or prompt (from Phase 2)
+- `npm run test -w api`, `npm run test -w @smartcanteen/db`, `npm run lint`, `npm run typecheck`, `npm run build`
+- `npm run check` — end-of-phase gate: typecheck, lint, format check, tests, build
+- `npm run db:migrate -w api`, `npm run db:seed -w api`, `npm run db:seed:sample -w api`
+- `npm run db:test:setup -w api` — create/migrate the `_test` database
+- `npm run user:set-password -w api` — rotate a user's password from env or prompt
+- `node db/dist/migrate.js` — production migration runner (no dev tools required)
 - `npx cdk diff` / `npx cdk deploy` (inside `/infra`) — NEVER deploy without my explicit go-ahead
 
 ## Non-negotiable rules
@@ -54,5 +57,8 @@ An external reviewer (Claude) reviews every phase; the human relays messages.
 - Role checks are enforced on the **server**. The UI hiding a tab is not authorization. Role rules live in one policy map (`api/src/auth/permissions.ts`).
 - Passwords are never returned by any endpoint and never logged.
 - Timestamps stored as `timestamptz` (UTC). Day bucketing uses `APP_TIMEZONE` (default `Asia/Manila`).
+- Production database connections must use TLS (`DATABASE_SSL=verify` by default); production startup
+  fails when `DATABASE_SSL=off`. Never rely on `sslmode` in the URL.
+- Tests may only connect to a database whose name ends in `_test`; never run test helpers against dev or production.
 - Every endpoint validates input with Zod and returns consistent `{ error: { code, message } }` on failure.
 - Write tests for: login, role guard, sale atomicity (concurrent sales cannot oversell), restock, report ranges.

@@ -14,10 +14,20 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "migrate": "drizzle-kit migrate",
-    "generate": "drizzle-kit generate"
+    "migrate": "tsx src/migrate.ts",
+    "migrate:prod": "node dist/migrate.js",
+    "generate": "drizzle-kit generate",
+    "seed": "tsx src/seed.ts",
+    "seed:prod": "node dist/seed.js",
+    "seed:sample": "tsx src/seed-sample-items.ts",
+    "seed:sample:prod": "node dist/seed-sample-items.js",
+    "set-password": "tsx src/set-password.ts",
+    "set-password:prod": "node dist/set-password.js",
+    "test": "vitest run",
+    "test:setup": "tsx src/testing/setup-test-db.ts"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.2.2",
     "dotenv": "18.0.8",
     "drizzle-orm": "0.45.4",
     "pg": "8.23.1"
@@ -26,6 +36,7 @@
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",
     "drizzle-kit": "0.31.11",
-    "tsx": "4.23.15"
+    "tsx": "4.23.15",
+    "vitest": "5.0.5"
   }
 }

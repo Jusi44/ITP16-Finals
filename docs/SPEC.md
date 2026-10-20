@@ -17,6 +17,8 @@ Android entities: FoodItem, Sale, StockRecord, User.
 
 Extensions: only `citext` is required. `gen_random_uuid()` is built into Postgres 13+, so `pgcrypto` is not installed. All money columns are `numeric(12,2)`.
 
+Database connections use TLS in production. `DATABASE_SSL` is `off`, `require` (encrypted, no certificate verification), or `verify` (certificate + hostname verification against `DATABASE_SSL_CA_FILE`). It defaults to `off` outside production and `verify` in production; production refuses to start with `off`. The `ssl` option is built explicitly and any `sslmode` in `DATABASE_URL` is ignored.
+
 ```sql
 CREATE TYPE user_role AS ENUM ('ADMIN','STAFF');
 CREATE TYPE stock_type AS ENUM ('RESTOCK','SALE');
@@ -26,7 +28,8 @@ CREATE TABLE users (
   username citext UNIQUE NOT NULL,
   password_hash text NOT NULL,
   role user_role NOT NULL DEFAULT 'STAFF',
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT users_username_format CHECK (username ~ '^[A-Za-z0-9_.-]{3,32}$')
 );
 CREATE TABLE food_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -46,13 +49,14 @@ CREATE TABLE sales (
   total_price numeric(12,2) NOT NULL,
   user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   username text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT sales_total_price_non_negative CHECK (total_price >= 0)
 );
 CREATE TABLE stock_records (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   item_id uuid REFERENCES food_items(id) ON DELETE SET NULL,
   item_name text NOT NULL,
-  quantity_changed int NOT NULL,
+  quantity_changed int NOT NULL CHECK (quantity_changed > 0),
   type stock_type NOT NULL,
   user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   username text NOT NULL DEFAULT 'System',
@@ -66,13 +70,18 @@ CREATE TABLE sessions (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX ON sales (created_at DESC);
+CREATE INDEX ON sales (item_id);
+CREATE INDEX ON sales (user_id);
 CREATE INDEX ON stock_records (created_at DESC);
 CREATE INDEX ON stock_records (item_id);
+CREATE INDEX ON stock_records (user_id);
 CREATE INDEX ON sessions (user_id);
 CREATE INDEX ON sessions (expires_at);
 ```
 
 `stock_records.quantity_changed` is always a positive magnitude; the UI derives `+N`/`-N` from `type`.
+
+`food_items.updated_at` is maintained by a `BEFORE UPDATE` trigger (`food_items_set_updated_at`), so ORM and raw SQL updates both refresh it.
 
 ## 3. Business rules (from the Android code)
 - **Low stock:** `current_stock <= min_threshold`. **Out of stock:** `current_stock = 0`.

@@ -9,7 +9,11 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "db:migrate": "npm run migrate -w @smartcanteen/db"
+    "db:migrate": "npm run migrate -w @smartcanteen/db",
+    "db:seed": "npm run seed -w @smartcanteen/db",
+    "db:seed:sample": "npm run seed:sample -w @smartcanteen/db",
+    "db:test:setup": "npm run test:setup -w @smartcanteen/db",
+    "user:set-password": "npm run set-password -w @smartcanteen/db"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.3",
